@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flutter/services.dart';
-import 'package:soundpool/soundpool.dart';
 
 class AudioManager extends Component {
   bool musicEnabled = true;
@@ -20,23 +18,12 @@ class AudioManager extends Component {
     'start',
   ];
 
-  final Map<String, int> _soundIds = {};
-  final Soundpool _soundpool = Soundpool.fromOptions(
-    options: const SoundpoolOptions(maxStreams: 10),
-  );
-
   @override
   FutureOr<void> onLoad() async {
     FlameAudio.bgm.initialize();
-
-    // load the sound effect files
-    for (String sound in _sounds) {
-      _soundIds[sound] = await rootBundle
-          .load('assets/audio/$sound.ogg')
-          .then((ByteData data) {
-        return _soundpool.load(data);
-      });
-    }
+    await FlameAudio.audioCache.loadAll(
+      _sounds.map((sound) => '$sound.ogg').toList(),
+    );
 
     return super.onLoad();
   }
@@ -49,7 +36,7 @@ class AudioManager extends Component {
 
   void playSound(String sound) {
     if (soundsEnabled) {
-      _soundpool.play(_soundIds[sound]!);
+      FlameAudio.play('$sound.ogg');
     }
   }
 
